@@ -51,6 +51,41 @@ def test_invalid_root():
         Calculation(operation="Root", operand1=Decimal("-16"), operand2=Decimal("2"))
 
 
+def test_modulus():
+    calc = Calculation(operation="Modulus", operand1=Decimal("10"), operand2=Decimal("3"))
+    assert calc.result == Decimal("1")
+
+
+def test_modulus_by_zero():
+    with pytest.raises(OperationError, match="Modulus by zero is not allowed"):
+        Calculation(operation="Modulus", operand1=Decimal("10"), operand2=Decimal("0"))
+
+
+def test_integer_division():
+    calc = Calculation(operation="IntegerDivision", operand1=Decimal("7"), operand2=Decimal("2"))
+    assert calc.result == Decimal("3")
+
+
+def test_integer_division_by_zero():
+    with pytest.raises(OperationError, match="Integer division by zero is not allowed"):
+        Calculation(operation="IntegerDivision", operand1=Decimal("7"), operand2=Decimal("0"))
+
+
+def test_percentage():
+    calc = Calculation(operation="Percentage", operand1=Decimal("50"), operand2=Decimal("100"))
+    assert calc.result == Decimal("50")
+
+
+def test_percentage_with_zero_base():
+    with pytest.raises(OperationError, match="Cannot calculate percentage with a base of zero"):
+        Calculation(operation="Percentage", operand1=Decimal("50"), operand2=Decimal("0"))
+
+
+def test_absolute_difference():
+    calc = Calculation(operation="AbsoluteDifference", operand1=Decimal("3"), operand2=Decimal("10"))
+    assert calc.result == Decimal("7")
+
+
 def test_unknown_operation():
     with pytest.raises(OperationError, match="Unknown operation"):
         Calculation(operation="Unknown", operand1=Decimal("5"), operand2=Decimal("3"))
