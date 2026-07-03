@@ -62,10 +62,14 @@ class Calculation:
             "Division": lambda x, y: x / y if y != 0 else self._raise_div_zero(),
             "Power": lambda x, y: Decimal(pow(float(x), float(y))) if y >= 0 else self._raise_neg_power(),
             "Root": lambda x, y: (
-                Decimal(pow(float(x), 1 / float(y))) 
-                if x >= 0 and y != 0 
+                Decimal(pow(float(x), 1 / float(y)))
+                if x >= 0 and y != 0
                 else self._raise_invalid_root(x, y)
-            )
+            ),
+            "Modulus": lambda x, y: x % y if y != 0 else self._raise_modulus_zero(),
+            "IntegerDivision": lambda x, y: x // y if y != 0 else self._raise_integer_division_zero(),
+            "Percentage": lambda x, y: (x / y) * 100 if y != 0 else self._raise_percentage_zero(),
+            "AbsoluteDifference": lambda x, y: abs(x - y),
         }
 
         # Retrieve the operation function based on the operation name
@@ -97,6 +101,36 @@ class Calculation:
         This method is called when a negative exponent is used in a power operation.
         """
         raise OperationError("Negative exponents are not supported")
+
+    @staticmethod
+    def _raise_modulus_zero():
+        """
+        Helper method to raise modulus by zero error.
+
+        This method is called when a modulus operation is attempted with a
+        divisor of zero.
+        """
+        raise OperationError("Modulus by zero is not allowed")
+
+    @staticmethod
+    def _raise_integer_division_zero():
+        """
+        Helper method to raise integer division by zero error.
+
+        This method is called when an integer division operation is attempted
+        with a divisor of zero.
+        """
+        raise OperationError("Integer division by zero is not allowed")
+
+    @staticmethod
+    def _raise_percentage_zero():
+        """
+        Helper method to raise percentage-with-zero-base error.
+
+        This method is called when a percentage operation is attempted with a
+        base (denominator) of zero.
+        """
+        raise OperationError("Cannot calculate percentage with a base of zero")
 
     @staticmethod
     def _raise_invalid_root(x: Decimal, y: Decimal):
