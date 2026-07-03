@@ -34,9 +34,15 @@ def calculator_repl():
                 command = input("\nEnter command: ").lower().strip()
 
                 if command == 'help':
-                    # Display available commands
+                    # Display available commands. The list of arithmetic
+                    # operations is generated dynamically from whatever is
+                    # currently registered with OperationFactory (via the
+                    # @register decorator in app/operations.py), so adding a
+                    # new operation automatically updates this menu with no
+                    # changes needed here.
                     print("\nAvailable commands:")
-                    print("  add, subtract, multiply, divide, power, root - Perform calculations")
+                    print(OperationFactory.get_help_text())
+                    print(OperationFactory.get_detailed_help_text())
                     print("  history - Show calculation history")
                     print("  clear - Clear calculation history")
                     print("  undo - Undo the last calculation")
@@ -107,7 +113,7 @@ def calculator_repl():
                         print(f"Error loading history: {e}")
                     continue
 
-                if command in ['add', 'subtract', 'multiply', 'divide', 'power', 'root']:
+                if command in OperationFactory.get_operation_names():
                     # Perform the specified arithmetic operation
                     try:
                         print("\nEnter numbers (or 'cancel' to abort):")
@@ -127,9 +133,13 @@ def calculator_repl():
                         # Perform the calculation
                         result = calc.perform_operation(a, b)
 
-                        # Normalize the result if it's a Decimal
+                        # Normalize the result if it's a Decimal. normalize()
+                        # alone can render round values in scientific
+                        # notation (e.g. Decimal('50.0') -> "5E+1"), so the
+                        # normalized value is explicitly formatted as plain
+                        # fixed-point for display.
                         if isinstance(result, Decimal):
-                            result = result.normalize()
+                            result = format(result.normalize(), 'f')
 
                         print(f"\nResult: {result}")
                     except (ValidationError, OperationError) as e:

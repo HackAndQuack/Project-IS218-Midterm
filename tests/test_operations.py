@@ -11,8 +11,38 @@ from app.operations import (
     Division,
     Power,
     Root,
+    Modulus,
+    IntegerDivision,
+    Percentage,
+    AbsoluteDifference,
     OperationFactory,
+    register,
 )
+
+
+class TestRegisterDecorator:
+    """Test the @register class decorator directly."""
+
+    def test_register_decorator_returns_class_unchanged(self):
+        """Test that decorating a valid Operation subclass returns it unmodified."""
+        @register("decorator_test_op", "A decorator test operation")
+        class DecoratorTestOperation(Operation):
+            def execute(self, a: Decimal, b: Decimal) -> Decimal:
+                return a
+
+        assert DecoratorTestOperation.__name__ == "DecoratorTestOperation"
+        operation = OperationFactory.create_operation("decorator_test_op")
+        assert isinstance(operation, DecoratorTestOperation)
+        assert "decorator_test_op - A decorator test operation" in (
+            OperationFactory.get_detailed_help_text()
+        )
+
+    def test_register_decorator_rejects_non_operation_classes(self):
+        """Test that @register raises TypeError for a class that isn't an Operation."""
+        with pytest.raises(TypeError, match="Operation class must inherit"):
+            @register("bad_op", "Should never register")
+            class NotAnOperation:
+                pass
 
 
 class TestOperation:
@@ -182,6 +212,80 @@ class TestRoot(BaseOperationTest):
     }
 
 
+class TestModulus(BaseOperationTest):
+    """Test Modulus operation."""
+
+    operation_class = Modulus
+    valid_test_cases = {
+        "positive_numbers": {"a": "10", "b": "3", "expected": "1"},
+        "exact_division": {"a": "9", "b": "3", "expected": "0"},
+        "dividend_smaller": {"a": "2", "b": "5", "expected": "2"},
+        "decimals": {"a": "5.5", "b": "2", "expected": "1.5"},
+    }
+    invalid_test_cases = {
+        "modulus_by_zero": {
+            "a": "5",
+            "b": "0",
+            "error": ValidationError,
+            "message": "Modulus by zero is not allowed"
+        },
+    }
+
+
+class TestIntegerDivision(BaseOperationTest):
+    """Test IntegerDivision operation."""
+
+    operation_class = IntegerDivision
+    valid_test_cases = {
+        "even_division": {"a": "10", "b": "2", "expected": "5"},
+        "discards_remainder": {"a": "7", "b": "2", "expected": "3"},
+        "negative_dividend": {"a": "-7", "b": "2", "expected": "-3"},
+        "dividend_smaller": {"a": "2", "b": "5", "expected": "0"},
+    }
+    invalid_test_cases = {
+        "integer_division_by_zero": {
+            "a": "5",
+            "b": "0",
+            "error": ValidationError,
+            "message": "Integer division by zero is not allowed"
+        },
+    }
+
+
+class TestPercentage(BaseOperationTest):
+    """Test Percentage operation."""
+
+    operation_class = Percentage
+    valid_test_cases = {
+        "half": {"a": "50", "b": "100", "expected": "50"},
+        "double": {"a": "20", "b": "10", "expected": "200"},
+        "quarter": {"a": "1", "b": "4", "expected": "25"},
+        "zero_numerator": {"a": "0", "b": "5", "expected": "0"},
+    }
+    invalid_test_cases = {
+        "zero_base": {
+            "a": "5",
+            "b": "0",
+            "error": ValidationError,
+            "message": "Cannot calculate percentage with a base of zero"
+        },
+    }
+
+
+class TestAbsoluteDifference(BaseOperationTest):
+    """Test AbsoluteDifference operation."""
+
+    operation_class = AbsoluteDifference
+    valid_test_cases = {
+        "positive_first_larger": {"a": "10", "b": "3", "expected": "7"},
+        "positive_second_larger": {"a": "3", "b": "10", "expected": "7"},
+        "equal_numbers": {"a": "5", "b": "5", "expected": "0"},
+        "negative_numbers": {"a": "-5", "b": "-2", "expected": "3"},
+        "decimals": {"a": "5.5", "b": "2.2", "expected": "3.3"},
+    }
+    invalid_test_cases = {}  # AbsoluteDifference has no invalid cases
+
+
 class TestOperationFactory:
     """Test OperationFactory functionality."""
 
@@ -194,6 +298,10 @@ class TestOperationFactory:
             'divide': Division,
             'power': Power,
             'root': Root,
+            'modulus': Modulus,
+            'int_divide': IntegerDivision,
+            'percent': Percentage,
+            'abs_diff': AbsoluteDifference,
         }
 
         for op_name, op_class in operation_map.items():
@@ -202,6 +310,38 @@ class TestOperationFactory:
             # Test case-insensitive
             operation = OperationFactory.create_operation(op_name.upper())
             assert isinstance(operation, op_class)
+
+    def test_get_operation_names_includes_all_registered_operations(self):
+        """Test that get_operation_names reflects every @register-decorated operation."""
+        names = OperationFactory.get_operation_names()
+        for expected in ('add', 'subtract', 'multiply', 'divide', 'power',
+                          'root', 'modulus', 'int_divide', 'percent', 'abs_diff'):
+            assert expected in names
+
+    def test_get_help_text_lists_all_operation_names(self):
+        """Test that the summary help line mentions every registered operation."""
+        help_text = OperationFactory.get_help_text()
+        for expected in ('add', 'subtract', 'multiply', 'divide', 'power',
+                          'root', 'modulus', 'int_divide', 'percent', 'abs_diff'):
+            assert expected in help_text
+
+    def test_get_detailed_help_text_includes_descriptions(self):
+        """Test that the detailed help block includes each operation's description."""
+        detailed = OperationFactory.get_detailed_help_text()
+        assert "modulus - Compute the remainder" in detailed
+        assert "abs_diff - Calculate the absolute difference" in detailed
+
+    def test_register_operation_adds_description(self):
+        """Test that register_operation stores a custom description for help text."""
+        class AnotherOperation(Operation):
+            def execute(self, a: Decimal, b: Decimal) -> Decimal:
+                return a
+
+        OperationFactory.register_operation(
+            "another_op", AnotherOperation, "Does something custom"
+        )
+        assert "another_op" in OperationFactory.get_operation_names()
+        assert "another_op - Does something custom" in OperationFactory.get_detailed_help_text()
 
     def test_create_invalid_operation(self):
         """Test creation of invalid operation raises error."""

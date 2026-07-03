@@ -108,10 +108,22 @@ def test_repl_load_error():
     ('divide', '10', '2', '5'),
     ('power', '2', '3', '8'),
     ('root', '16', '2', '4'),
+    ('modulus', '10', '3', '1'),
+    ('int_divide', '7', '2', '3'),
+    ('percent', '50', '100', '50'),
+    ('abs_diff', '3', '10', '7'),
 ])
 def test_repl_operations(command, a, b, expected):
     mock_print = run_repl([command, a, b, 'exit'])
     mock_print.assert_any_call(f"\nResult: {expected}")
+
+
+def test_repl_help_lists_new_operations():
+    """Test that the dynamically generated help menu includes the newly added operations."""
+    mock_print = run_repl(['help', 'exit'])
+    printed = " ".join(str(call.args[0]) for call in mock_print.call_args_list if call.args)
+    for op_name in ('modulus', 'int_divide', 'percent', 'abs_diff'):
+        assert op_name in printed
 
 
 def test_repl_cancel_on_first_number():
