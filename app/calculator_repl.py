@@ -3,11 +3,11 @@
 ########################
 
 from decimal import Decimal
-import logging
 
 from app.calculator import Calculator
 from app.exceptions import OperationError, ValidationError
 from app.history import AutoSaveObserver, LoggingObserver
+from app.logger import Logger
 from app.operations import OperationFactory
 
 
@@ -169,5 +169,5 @@ def calculator_repl():
     except Exception as e:
         # Handle fatal errors during initialization
         print(f"Fatal error: {e}")
-        logging.error(f"Fatal error in calculator REPL: {e}")
+        Logger.error(f"Fatal error in calculator REPL: {e}")
         raise

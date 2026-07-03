@@ -43,6 +43,7 @@ app/
 ├── exceptions.py            # CalculatorError hierarchy
 ├── history.py               # Observer pattern (logging, auto-save)
 ├── input_validators.py      # Input validation/sanitization
+├── logger.py                # Centralized logging configuration and access point
 └── operations.py            # Strategy + Factory for arithmetic operations
 tests/
 ├── test_calculations.py
@@ -53,6 +54,7 @@ tests/
 ├── test_exceptions.py
 ├── test_history.py
 ├── test_input_validators.py
+├── test_logger.py
 └── test_operations.py
 main.py                      # Entry point — launches the REPL
 ```
