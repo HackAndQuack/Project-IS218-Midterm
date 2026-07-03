@@ -47,7 +47,7 @@ def test_calculator_initialization(calculator):
 
 # Test Logging Setup
 
-@patch('app.calculator.logging.info')
+@patch('app.calculator.Logger.info')
 def test_logging_setup(logging_info_mock):
     with patch.object(CalculatorConfig, 'log_dir', new_callable=PropertyMock) as mock_log_dir, \
          patch.object(CalculatorConfig, 'log_file', new_callable=PropertyMock) as mock_log_file:
@@ -165,7 +165,7 @@ def test_setup_logging_failure_raises_and_prints(capsys):
     with TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
         with patched_config(temp_path) as config:
-            with patch('app.calculator.logging.basicConfig', side_effect=OSError("disk full")):
+            with patch('app.logger.logging.basicConfig', side_effect=OSError("disk full")):
                 with pytest.raises(OSError, match="disk full"):
                     Calculator(config=config)
     assert "Error setting up logging" in capsys.readouterr().out
@@ -178,7 +178,7 @@ def test_init_load_history_failure_is_logged_not_raised():
         temp_path = Path(temp_dir)
         with patched_config(temp_path) as config:
             with patch('app.calculator.Calculator.load_history', side_effect=OperationError("bad csv")):
-                with patch('app.calculator.logging.warning') as mock_warning:
+                with patch('app.calculator.Logger.warning') as mock_warning:
                     calc = Calculator(config=config)
     assert calc.history == []
     mock_warning.assert_called_once()
