@@ -80,6 +80,10 @@ pip install -r requirements.txt
 
 Configuration is loaded via `python-dotenv` from a `.env` file in the project root (all settings have sane defaults if omitted):
 
+```bash
+cp .env.example .env
+```
+
 | Variable | Default | Purpose |
 |---|---|---|
 | `CALCULATOR_BASE_DIR` | project root | Base directory for logs/history when not overridden individually |
