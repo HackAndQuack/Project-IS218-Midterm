@@ -1,11 +1,12 @@
 # Advanced Python Calculator
 
-A REPL-based calculator built around five classic design patterns (Facade, Strategy, Factory, Observer, Memento), with pandas-backed history persistence and environment-driven configuration.
+A REPL-based calculator built around six classic design patterns (Facade, Strategy, Factory, Observer, Memento, Decorator), with pandas-backed history persistence and environment-driven configuration.
 
 ## Features
 
 - **REPL interface** — continuous read-eval-print loop for interactive calculations
-- **Six arithmetic operations** — addition, subtraction, multiplication, division, power, root
+- **Ten arithmetic operations** — addition, subtraction, multiplication, division, power, root, modulus, integer division, percentage, and absolute difference
+- **Self-registering operations** — new operations announce themselves via the `@register` decorator and automatically appear in both the Factory and the REPL's `help` menu — no manual list to maintain
 - **Undo/redo** — every calculation can be undone and redone via the Memento pattern
 - **Persistent history** — calculation history is stored as a pandas `DataFrame` and saved/loaded as CSV
 - **Auto-save** — an observer can save history automatically after every calculation
@@ -21,6 +22,7 @@ A REPL-based calculator built around five classic design patterns (Facade, Strat
 | **Factory** | `app/operations.py` (`OperationFactory`) | Builds the right `Operation` instance from a string like `"add"`; new operations can be registered at runtime via `register_operation` |
 | **Observer** | `app/history.py` (`HistoryObserver`, `LoggingObserver`, `AutoSaveObserver`) | Calculator notifies registered observers after every calculation — used for logging and auto-saving |
 | **Memento** | `app/calculator_memento.py` (`CalculatorMemento`) | Snapshots of calculation history pushed onto undo/redo stacks in `Calculator.undo()` / `Calculator.redo()` |
+| **Decorator** | `app/operations.py` (`register`) | A class decorator that registers an `Operation` subclass's command name and description at definition time; `OperationFactory` and the REPL's `help` menu read from that live registry, so a new operation is created *and* documented from a single `@register(...)` line |
 
 ## Error Handling: LBYL vs. EAFP
 
@@ -108,17 +110,31 @@ Result: 5
 
 | Command | Description |
 |---|---|
-| `add`, `subtract`, `multiply`, `divide`, `power`, `root` | Perform the named operation on two prompted numbers |
+| `add`, `subtract`, `multiply`, `divide`, `power`, `root`, `modulus`, `int_divide`, `percent`, `abs_diff` | Perform the named operation on two prompted numbers |
 | `history` | Show all calculations performed this session |
 | `clear` | Clear history and the undo/redo stacks |
 | `undo` | Undo the last calculation |
 | `redo` | Redo the last undone calculation |
 | `save` | Save history to the configured CSV file |
 | `load` | Reload history from the configured CSV file |
-| `help` | List available commands |
+| `help` | List available commands (operation list is generated dynamically from the registered operations) |
 | `exit` | Save history and quit |
 
 While entering operands, type `cancel` to abort the current operation.
+
+### Adding a new operation
+
+Because operations self-register, adding one is a single change in `app/operations.py` — no edits needed anywhere else:
+
+```python
+@register("cube", "Raise a number to the power of 3")
+class Cube(Operation):
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        self.validate_operands(a, b)
+        return a ** 3
+```
+
+`cube` is now creatable via `OperationFactory.create_operation("cube")`, recognized as a command by the REPL, and shown in `help` automatically.
 
 ## Testing
 
