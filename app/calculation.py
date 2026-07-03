@@ -5,10 +5,10 @@
 from dataclasses import dataclass, field
 import datetime
 from decimal import Decimal, InvalidOperation
-import logging
 from typing import Any, Dict
 
 from app.exceptions import OperationError
+from app.logger import Logger
 
 
 @dataclass
@@ -199,7 +199,7 @@ class Calculation:
             # Verify the result matches (helps catch data corruption)
             saved_result = Decimal(data['result'])
             if calc.result != saved_result:
-                logging.warning(
+                Logger.warning(
                     f"Loaded calculation result {saved_result} "
                     f"differs from computed result {calc.result}"
                 )
